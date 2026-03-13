@@ -1,0 +1,788 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SteerCalc Pro - Steering Design Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+--bg:#0d1117;--bg2:#161b22;--bg3:#1c2330;--bg4:#21262d;
+--accent:#00d4ff;--accent2:#7c3aed;--accent3:#10b981;--accent4:#f59e0b;--danger:#ef4444;
+--text:#e6edf3;--text2:#8b949e;--border:#30363d;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+.header{background:linear-gradient(90deg,#0d1117 0%,#1a1f35 50%,#0d1117 100%);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{display:flex;align-items:center;gap:12px;}
+.logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.logo-text{font-size:22px;font-weight:700;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo-sub{font-size:11px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;}
+.badge{background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);color:var(--accent);font-size:11px;padding:4px 10px;border-radius:20px;letter-spacing:1px;}
+.main{display:flex;flex:1;overflow:hidden;}
+.sidebar{width:280px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;}
+.sidebar-header{padding:16px 20px;border-bottom:1px solid var(--border);}
+.sidebar-header h3{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:2px;}
+.nav-tabs{display:flex;flex-direction:column;padding:12px;}
+.nav-tab{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;cursor:pointer;transition:all .2s;margin-bottom:4px;border:1px solid transparent;font-size:14px;color:var(--text2);}
+.nav-tab:hover{background:var(--bg3);color:var(--text);}
+.nav-tab.active{background:linear-gradient(135deg,rgba(0,212,255,0.15),rgba(124,58,237,0.15));border-color:rgba(0,212,255,0.3);color:var(--accent);}
+.nav-tab .tab-num{width:22px;height:22px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;}
+.nav-tab.active .tab-num{background:var(--accent);color:#000;}
+.section-divider{padding:8px 20px;font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:2px;margin-top:8px;}
+.abbrev-box{margin:12px;padding:14px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);}
+.abbrev-box h4{font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.abbrev-item{font-size:12px;color:var(--text2);padding:3px 0;display:flex;gap:6px;}
+.abbrev-item strong{color:var(--text);min-width:50px;}
+.content{flex:1;overflow-y:auto;padding:24px;}
+.section{display:none;}
+.section.active{display:block;}
+.section-title{font-size:20px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:10px;}
+.section-title .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);}
+.section-desc{font-size:13px;color:var(--text2);margin-bottom:24px;}
+.cards-row{display:grid;gap:16px;margin-bottom:20px;}
+.cards-row.cols-2{grid-template-columns:1fr 1fr;}
+.cards-row.cols-3{grid-template-columns:1fr 1fr 1fr;}
+.cards-row.cols-4{grid-template-columns:repeat(4,1fr);}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;transition:border-color .2s;}
+.card:hover{border-color:rgba(0,212,255,0.3);}
+.card-title{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.card-title .indicator{width:6px;height:6px;border-radius:50%;}
+.inp-group{margin-bottom:12px;}
+.inp-group label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;}
+.inp-group label span{color:var(--accent);font-size:11px;margin-left:4px;}
+.inp-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.inp-row.cols3{grid-template-columns:1fr 1fr 1fr;}
+input[type=number],select{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s;}
+input[type=number]:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,212,255,0.15);}
+input[type=number]::placeholder{color:var(--text2);}
+.btn{padding:12px 28px;border:none;border-radius:10px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;font-size:14px;transition:all .2s;display:inline-flex;align-items:center;gap:8px;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,212,255,0.3);}
+.btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border);}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+.btn-success{background:linear-gradient(135deg,var(--accent3),#059669);color:#fff;}
+.btn-danger{background:linear-gradient(135deg,var(--danger),#dc2626);color:#fff;}
+.btn-sm{padding:7px 14px;font-size:12px;}
+.output-panel{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:20px;}
+.output-panel h3{font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;}
+.result-card{background:var(--bg3);border-radius:10px;padding:16px;border-left:3px solid var(--accent);}
+.result-card.warn{border-left-color:var(--accent4);}
+.result-card.success{border-left-color:var(--accent3);}
+.result-card.danger{border-left-color:var(--danger);}
+.result-label{font-size:11px;color:var(--text2);margin-bottom:6px;}
+.result-value{font-size:22px;font-weight:700;color:var(--accent);}
+.result-value.warn{color:var(--accent4);}
+.result-value.success{color:var(--accent3);}
+.result-value.danger{color:var(--danger);}
+.result-unit{font-size:12px;color:var(--text2);margin-left:4px;}
+.tab-group{display:flex;gap:4px;margin-bottom:20px;background:var(--bg3);padding:4px;border-radius:10px;width:fit-content;}
+.tab-btn{padding:8px 18px;border:none;background:transparent;color:var(--text2);border-radius:8px;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;transition:all .2s;}
+.tab-btn.active{background:var(--bg);color:var(--accent);box-shadow:0 1px 4px rgba(0,0,0,0.4);}
+.condition-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px;}
+.condition-col{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;}
+.condition-col h4{font-size:12px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.cond-sap{border-top:2px solid var(--accent);}
+.cond-rh{border-top:2px solid var(--accent3);}
+.cond-lh{border-top:2px solid var(--accent4);}
+.formula-chip{background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);color:var(--accent);font-size:11px;padding:3px 8px;border-radius:4px;font-family:monospace;margin-bottom:4px;display:inline-block;}
+.steering-anim-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px;}
+.table-wrap{overflow-x:auto;margin-top:16px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{background:var(--bg3);padding:10px 14px;text-align:left;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);}
+tbody td{padding:10px 14px;border-bottom:1px solid rgba(48,54,61,0.5);color:var(--text);}
+tbody tr:hover td{background:rgba(0,212,255,0.04);}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;}
+.tag-good{background:rgba(16,185,129,0.15);color:var(--accent3);}
+.tag-warn{background:rgba(245,158,11,0.15);color:var(--accent4);}
+.tag-bad{background:rgba(239,68,68,0.15);color:var(--danger);}
+.anim-canvas{border-radius:12px;background:var(--bg3);border:1px solid var(--border);}
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;}
+.info-note{background:rgba(0,212,255,0.07);border:1px solid rgba(0,212,255,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--accent);margin-bottom:16px;}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(var(--spin-deg,0deg));}}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
+.calculating{animation:pulse 1s infinite;}
+.progress-bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:6px;}
+.progress-fill{height:100%;border-radius:3px;transition:width 0.5s ease;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">&#9881;</div>
+    <div>
+      <div class="logo-text">SteerCalc Pro</div>
+      <div class="logo-sub">Steering Design System</div>
+    </div>
+  </div>
+  <div class="badge">Automotive OEM v1.0</div>
+</div>
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-header"><h3>Design Stages</h3></div>
+    <div class="nav-tabs">
+      <div class="nav-tab active" onclick="showSection('effort')"><span class="tab-num">1</span>Steering Effort</div>
+      <div class="nav-tab" onclick="showSection('ackerman')"><span class="tab-num">2</span>Ackerman Analysis</div>
+      <div class="nav-tab" onclick="showSection('tcd')"><span class="tab-num">3</span>TCD Calculation</div>
+    </div>
+    <div class="section-divider">Abbreviations</div>
+    <div class="abbrev-box">
+      <h4>Reference</h4>
+      <div class="abbrev-item"><strong>SAP</strong><span>Straight Ahead Position</span></div>
+      <div class="abbrev-item"><strong>FAW</strong><span>Front Axle Weight</span></div>
+      <div class="abbrev-item"><strong>SLR</strong><span>Static Load Radius</span></div>
+      <div class="abbrev-item"><strong>KPCD</strong><span>King Pin Center Distance</span></div>
+      <div class="abbrev-item"><strong>KPI</strong><span>King Pin Inclination</span></div>
+      <div class="abbrev-item"><strong>SGB</strong><span>Steering Gear Box</span></div>
+      <div class="abbrev-item"><strong>TCD</strong><span>Turning Circle Diameter</span></div>
+      <div class="abbrev-item"><strong>CD</strong><span>Center Distance</span></div>
+    </div>
+  </div>
+  <div class="content">
+    <!-- SECTION 1: STEERING EFFORT -->
+    <div id="sec-effort" class="section active">
+      <div class="section-title"><span class="dot"></span>Steering Effort Calculation</div>
+      <div class="section-desc">Calculate kingpin torque, steering forces and driver effort for SAP, RH Turn and LH Turn conditions.</div>
+
+      <!-- Common Inputs -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title"><span class="indicator" style="background:var(--accent)"></span>Common Inputs (Same for all conditions)</div>
+        <div class="inp-row">
+          <div class="inp-group"><label>FAW - Wf <span>(kg)</span></label><input type="number" id="e_wf" placeholder="e.g. 4000" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>SLR - R <span>(m)</span></label><input type="number" id="e_slr" placeholder="e.g. 0.45" step="0.001" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Tyre Contact Width - B <span>(m)</span></label><input type="number" id="e_B" placeholder="e.g. 0.22" step="0.001" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>KPCD - kpcd <span>(m)</span></label><input type="number" id="e_kpcd" placeholder="e.g. 1.8" step="0.001" oninput="calcEffort()"></div>
+        </div>
+        <div class="inp-row">
+          <div class="inp-group"><label>KPI - θkp <span>(deg)</span></label><input type="number" id="e_kpi" placeholder="e.g. 6" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Camber - θcm <span>(deg)</span></label><input type="number" id="e_camber" placeholder="e.g. 1" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Wheel Rim Offset <span>(m)</span></label><input type="number" id="e_rimoffset" placeholder="e.g. 0.05" step="0.001" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Coeff. of Friction - µ</label><input type="number" id="e_mu" placeholder="e.g. 0.7" step="0.01" oninput="calcEffort()"></div>
+        </div>
+        <div class="inp-row">
+          <div class="inp-group"><label>Steering Arm Length <span>(m)</span></label><input type="number" id="e_stgarm" placeholder="e.g. 0.18" step="0.001" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Pitman Arm CD <span>(m)</span></label><input type="number" id="e_pitman" placeholder="e.g. 0.12" step="0.001" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Drag Link Efficiency</label><input type="number" id="e_dleff" placeholder="e.g. 0.95" step="0.01" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>SGB Torque <span>(N-m)</span></label><input type="number" id="e_sgbt" placeholder="e.g. 400" oninput="calcEffort()"></div>
+        </div>
+        <div class="inp-row">
+          <div class="inp-group"><label>Gear Ratio</label><input type="number" id="e_gr" placeholder="e.g. 20" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Steering Column Efficiency</label><input type="number" id="e_coleff" placeholder="e.g. 0.9" step="0.01" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Radius of Steering Wheel <span>(m)</span></label><input type="number" id="e_swrad" placeholder="e.g. 0.25" step="0.001" oninput="calcEffort()"></div>
+        </div>
+      </div>
+
+      <!-- Condition Tabs -->
+      <div class="tab-group">
+        <button class="tab-btn active" onclick="showCondTab('sap',this)">&#9679; Straight Ahead (SAP)</button>
+        <button class="tab-btn" onclick="showCondTab('rh',this)">&#8635; RH Turn</button>
+        <button class="tab-btn" onclick="showCondTab('lh',this)">&#8634; LH Turn</button>
+      </div>
+
+      <!-- SAP Condition -->
+      <div id="cond-sap" class="condition-row" style="grid-template-columns:1fr 1fr;">
+        <div class="condition-col cond-sap">
+          <h4 style="color:var(--accent)">&#9890; LH Wheel End - SAP</h4>
+          <div class="inp-group"><label>Track Arm CD LH <span>(m)</span></label><input type="number" id="sap_trackLH" placeholder="e.g. 0.15" step="0.001" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Angle b/w Track Arm &amp; Tie Rod LH - P <span>(deg)</span></label><input type="number" id="sap_angP" placeholder="e.g. 95" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Inner/Outer Lock Angle <span>(N)</span></label><input type="number" id="sap_lockLH" placeholder="e.g. 0" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Angle b/w Steering Arm &amp; Draglink - R <span>(deg)</span></label><input type="number" id="sap_angR" placeholder="e.g. 100" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Angle b/w Pitman Arm &amp; DL - S <span>(deg)</span></label><input type="number" id="sap_angS" placeholder="e.g. 95" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Drop Arm Travel from SAP <span>(deg)</span></label><input type="number" id="sap_dropL" placeholder="e.g. 0" step="0.1" oninput="calcEffort()"></div>
+        </div>
+        <div class="condition-col cond-sap">
+          <h4 style="color:var(--accent)">&#9890; RH Wheel End - SAP</h4>
+          <div class="inp-group"><label>Track Arm CD RH <span>(m)</span></label><input type="number" id="sap_trackRH" placeholder="e.g. 0.15" step="0.001" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Angle b/w Track Arm &amp; Tie Rod RH - Q <span>(deg)</span></label><input type="number" id="sap_angQ" placeholder="e.g. 95" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Inner/Outer Lock Angle <span>(N)</span></label><input type="number" id="sap_lockRH" placeholder="e.g. 0" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Torque on RH Kingpin <span>(N-m)</span></label><input type="number" id="sap_rhtq" placeholder="computed" readonly style="opacity:0.7"></div>
+          <div class="inp-group"><label>Drop Arm Travel from SAP <span>(deg)</span></label><input type="number" id="sap_dropR" placeholder="e.g. 0" step="0.1" oninput="calcEffort()"></div>
+        </div>
+      </div>
+
+      <!-- RH Turn -->
+      <div id="cond-rh" class="condition-row" style="grid-template-columns:1fr 1fr;display:none;">
+        <div class="condition-col cond-rh">
+          <h4 style="color:var(--accent3)">&#8635; LH Wheel End - RH Turn</h4>
+          <div class="inp-group"><label>Track Arm CD LH <span>(m)</span></label><input type="number" id="rh_trackLH" placeholder="e.g. 0.15" step="0.001" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Angle b/w Track Arm &amp; Tie Rod LH - P <span>(deg)</span></label><input type="number" id="rh_angP" placeholder="e.g. 95" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Outer Lock Angle <span>(deg)</span></label><input type="number" id="rh_lockLH" placeholder="e.g. 25" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Angle b/w Steering Arm &amp; Draglink - R <span>(deg)</span></label><input type="number" id="rh_angR" placeholder="e.g. 95" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Angle b/w Pitman Arm &amp; DL - S <span>(deg)</span></label><input type="number" id="rh_angS" placeholder="e.g. 90" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Drop Arm Travel from SAP <span>(deg)</span></label><input type="number" id="rh_dropL" placeholder="e.g. 45" step="0.1" oninput="calcEffort()"></div>
+        </div>
+        <div class="condition-col cond-rh">
+          <h4 style="color:var(--accent3)">&#8635; RH Wheel End - RH Turn</h4>
+          <div class="inp-group"><label>Track Arm CD RH <span>(m)</span></label><input type="number" id="rh_trackRH" placeholder="e.g. 0.15" step="0.001" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Angle b/w Track Arm &amp; Tie Rod RH - Q <span>(deg)</span></label><input type="number" id="rh_angQ" placeholder="e.g. 85" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Inner Lock Angle <span>(deg)</span></label><input type="number" id="rh_lockRH" placeholder="e.g. 35" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Drop Arm Travel from SAP <span>(deg)</span></label><input type="number" id="rh_dropR" placeholder="e.g. 45" step="0.1" oninput="calcEffort()"></div>
+        </div>
+      </div>
+
+      <!-- LH Turn -->
+      <div id="cond-lh" class="condition-row" style="grid-template-columns:1fr 1fr;display:none;">
+        <div class="condition-col cond-lh">
+          <h4 style="color:var(--accent4)">&#8634; LH Wheel End - LH Turn</h4>
+          <div class="inp-group"><label>Track Arm CD LH <span>(m)</span></label><input type="number" id="lh_trackLH" placeholder="e.g. 0.15" step="0.001" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Angle b/w Track Arm &amp; Tie Rod LH - P <span>(deg)</span></label><input type="number" id="lh_angP" placeholder="e.g. 85" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Inner Lock Angle <span>(deg)</span></label><input type="number" id="lh_lockLH" placeholder="e.g. 35" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Angle b/w Steering Arm &amp; Draglink - R <span>(deg)</span></label><input type="number" id="lh_angR" placeholder="e.g. 100" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Angle b/w Pitman Arm &amp; DL - S <span>(deg)</span></label><input type="number" id="lh_angS" placeholder="e.g. 100" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Drop Arm Travel from SAP <span>(deg)</span></label><input type="number" id="lh_dropL" placeholder="e.g. 45" step="0.1" oninput="calcEffort()"></div>
+        </div>
+        <div class="condition-col cond-lh">
+          <h4 style="color:var(--accent4)">&#8634; RH Wheel End - LH Turn</h4>
+          <div class="inp-group"><label>Track Arm CD RH <span>(m)</span></label><input type="number" id="lh_trackRH" placeholder="e.g. 0.15" step="0.001" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Angle b/w Track Arm &amp; Tie Rod RH - Q <span>(deg)</span></label><input type="number" id="lh_angQ" placeholder="e.g. 95" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Outer Lock Angle <span>(deg)</span></label><input type="number" id="lh_lockRH" placeholder="e.g. 25" step="0.1" oninput="calcEffort()"></div>
+          <div class="inp-group"><label>Drop Arm Travel from SAP <span>(deg)</span></label><input type="number" id="lh_dropR" placeholder="e.g. 45" step="0.1" oninput="calcEffort()"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="output-panel">
+        <h3>&#128200; Calculation Results</h3>
+        <div class="result-grid">
+          <div class="result-card"><div class="result-label">FAW (N)</div><div class="result-value" id="out_fawN">—</div></div>
+          <div class="result-card"><div class="result-label">Pivot Center at Ground (m)</div><div class="result-value" id="out_pivot">—</div></div>
+          <div class="result-card"><div class="result-label">Track at Ground (m)</div><div class="result-value" id="out_track">—</div></div>
+          <div class="result-card"><div class="result-label">KP Offset at Ground E (m)</div><div class="result-value" id="out_kpoff">—</div></div>
+          <div class="result-card warn"><div class="result-label">KP Torque at SAP (N-m)</div><div class="result-value warn" id="out_kptq">—</div></div>
+          <div class="result-card"><div class="result-label">Draglink Force (N)</div><div class="result-value" id="out_dlforce">—</div></div>
+          <div class="result-card"><div class="result-label">Torque on Sector Shaft (N-m)</div><div class="result-value" id="out_sectq">—</div></div>
+          <div class="result-card success"><div class="result-label">&#9651; Effort by Driver (N)</div><div class="result-value success" id="out_effN">—</div></div>
+          <div class="result-card success"><div class="result-label">&#9651; Effort by Driver (kg)</div><div class="result-value success" id="out_effkg">—</div></div>
+          <div class="result-card warn"><div class="result-label">No. of Steering Wheel Turns</div><div class="result-value warn" id="out_turns">—</div></div>
+        </div>
+        <!-- Steering Wheel Animation -->
+        <div style="margin-top:24px;display:flex;align-items:center;gap:40px;flex-wrap:wrap;">
+          <div class="steering-anim-wrap">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Steering Wheel Rotation</div>
+            <canvas id="swCanvas" width="200" height="200" class="anim-canvas"></canvas>
+            <div style="font-size:12px;color:var(--text2);margin-top:8px;" id="swLabel">Enter inputs to animate</div>
+          </div>
+          <div style="flex:1;min-width:250px;">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">Intermediate Calculations</div>
+            <div id="int_calcs" style="font-size:12px;color:var(--text2);line-height:2;background:var(--bg3);padding:14px;border-radius:8px;font-family:monospace;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- SECTION 2: ACKERMAN ANALYSIS -->
+    <div id="sec-ackerman" class="section">
+      <div class="section-title"><span class="dot" style="background:var(--accent3)"></span>Ackerman Analysis</div>
+      <div class="section-desc">Analyze Ackerman geometry error for various outer angles. Compare ideal vs actual inner angles.</div>
+
+      <div class="info-note">&#9432; T, L and outer angle (θ) are entered by user. Outer angles may be entered in intervals of 2°. Actual inner angle (Ø1) is also user-entered. All other values are computed.</div>
+
+      <div class="cards-row cols-3" style="margin-bottom:16px;">
+        <div class="card">
+          <div class="card-title"><span class="indicator" style="background:var(--accent3)"></span>Wheelbase</div>
+          <div class="inp-group"><label>L - Wheelbase <span>(mm)</span></label><input type="number" id="ack_L" placeholder="e.g. 3800" oninput="calcAckerman()"></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="indicator" style="background:var(--accent3)"></span>KPI Distance</div>
+          <div class="inp-group"><label>T - Pivot Center Distance <span>(mm)</span></label><input type="number" id="ack_T" placeholder="e.g. 1860" oninput="calcAckerman()"></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="indicator" style="background:var(--accent3)"></span>Gear Ratio</div>
+          <div class="inp-group"><label>Gear Ratio (for turns calc)</label><input type="number" id="ack_gr" placeholder="e.g. 20" step="0.1" oninput="calcAckerman()"></div>
+        </div>
+      </div>
+
+      <!-- Dynamic Table -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title" style="justify-content:space-between;display:flex;">
+          <span><span class="indicator" style="background:var(--accent3)"></span>Angle Analysis Table</span>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-success btn-sm" onclick="addAckRow()">+ Add Row</button>
+            <button class="btn btn-secondary btn-sm" onclick="clearAckRows()">Clear All</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="ackTable">
+            <thead>
+              <tr>
+                <th>L (mm)</th><th>T (mm)</th><th>θ - Outer Angle (°)</th><th>Ø1 - Actual Inner (°)</th>
+                <th>T/L</th><th>1/tan θ</th><th>Ø - Ideal Inner (°)</th>
+                <th>Error (°)</th><th>Error (%)</th><th>% Ackerman</th>
+                <th>Drop Arm SAP (°)</th><th>SW Turns</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="ackBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Ackerman Animation Canvas -->
+      <div class="output-panel">
+        <h3>&#127758; Ackerman Geometry Visualization</h3>
+        <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+          <canvas id="ackCanvas" width="580" height="320" class="anim-canvas"></canvas>
+          <div style="flex:1;min-width:220px;">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">Error Summary</div>
+            <div id="ack_summary" style="font-size:13px;line-height:2.2;background:var(--bg3);padding:14px;border-radius:8px;">
+              <span style="color:var(--text2)">Enter values in the table to see results...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: TCD CALCULATION -->
+    <div id="sec-tcd" class="section">
+      <div class="section-title"><span class="dot" style="background:var(--accent4)"></span>TCD - Turning Circle Diameter</div>
+      <div class="section-desc">Calculate the turning circle diameter of the vehicle and visualize it with an animated top-view layout.</div>
+
+      <div class="cards-row cols-2" style="margin-bottom:16px;">
+        <div class="card">
+          <div class="card-title"><span class="indicator" style="background:var(--accent4)"></span>Tyre & Axle Parameters</div>
+          <div class="inp-row">
+            <div class="inp-group"><label>KS - King Pin Spacing <span>(mm)</span></label><input type="number" id="t_ks" placeholder="e.g. 1800" oninput="calcTCD()"></div>
+            <div class="inp-group"><label>RR - Rolling Radius <span>(mm)</span></label><input type="number" id="t_rr" placeholder="e.g. 450" oninput="calcTCD()"></div>
+          </div>
+          <div class="inp-row">
+            <div class="inp-group"><label>Ca - Camber Angle <span>(deg)</span></label><input type="number" id="t_ca" placeholder="e.g. 1" step="0.1" oninput="calcTCD()"></div>
+            <div class="inp-group"><label>KI - King Pin Inclination <span>(deg)</span></label><input type="number" id="t_ki" placeholder="e.g. 6" step="0.1" oninput="calcTCD()"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="indicator" style="background:var(--accent4)"></span>Vehicle Geometry</div>
+          <div class="inp-row">
+            <div class="inp-group"><label>WB - Wheelbase <span>(mm)</span></label><input type="number" id="t_wb" placeholder="e.g. 3800" oninput="calcTCD()"></div>
+            <div class="inp-group"><label>Ota - Outer Wheel Turn Angle <span>(deg)</span></label><input type="number" id="t_ota" placeholder="e.g. 25" step="0.1" oninput="calcTCD()"></div>
+          </div>
+          <div class="inp-row">
+            <div class="inp-group"><label>Wd - Width of Vehicle <span>(mm)</span></label><input type="number" id="t_wd" placeholder="e.g. 2500" oninput="calcTCD()"></div>
+            <div class="inp-group"><label>FOH - Front Overhang <span>(mm)</span></label><input type="number" id="t_foh" placeholder="e.g. 1200" oninput="calcTCD()"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TCD Outputs -->
+      <div class="output-panel">
+        <h3>&#128200; TCD Results</h3>
+        <div class="result-grid" style="margin-bottom:20px;">
+          <div class="result-card"><div class="result-label">TOS - Tyre Offset (mm)</div><div class="result-value" id="out_tos">—</div></div>
+          <div class="result-card warn"><div class="result-label">OS - Scrub Radius (mm)</div><div class="result-value warn" id="out_os">—</div></div>
+          <div class="result-card success"><div class="result-label">Track at Ground T (mm)</div><div class="result-value success" id="out_T">—</div></div>
+          <div class="result-card danger"><div class="result-label">Turning Diameter TD (mm)</div><div class="result-value danger" id="out_td">—</div></div>
+          <div class="result-card"><div class="result-label">Turning Diameter TD (m)</div><div class="result-value" id="out_tdm">—</div></div>
+        </div>
+        <!-- Formulas Display -->
+        <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Formulas Applied:</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+          <span class="formula-chip">TOS = (T - KS) / 2</span>
+          <span class="formula-chip">OS = TOS - [RR × tan(KI)]</span>
+          <span class="formula-chip">TD = 2 × [WB / sin(Ota) + OS]</span>
+          <span class="formula-chip">T = KS + 2×(TOS - RR×tan(Ca))×sin(Ca)</span>
+        </div>
+        <!-- TCD Animation -->
+        <h3 style="margin-bottom:12px;">&#127941; Turning Circle Animation</h3>
+        <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;">
+          <canvas id="tcdCanvas" width="500" height="500" class="anim-canvas"></canvas>
+          <div style="flex:1;min-width:200px;">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">Vehicle Parameters</div>
+            <div id="tcd_params" style="font-size:13px;line-height:2.4;background:var(--bg3);padding:14px;border-radius:8px;color:var(--text2);">
+              Enter values to see turning circle animation...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+<script>
+// ===== NAVIGATION =====
+function showSection(name){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+function showCondTab(cond,btn){
+  ['sap','rh','lh'].forEach(c=>{
+    document.getElementById('cond-'+c).style.display='none';
+  });
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('cond-'+cond).style.display='grid';
+  btn.classList.add('active');
+}
+
+// ===== HELPERS =====
+const d2r = d => d * Math.PI / 180;
+const r2d = r => r * 180 / Math.PI;
+const v = id => parseFloat(document.getElementById(id).value) || 0;
+const set = (id,val) => { const el=document.getElementById(id); if(el) el.textContent = isNaN(val)||!isFinite(val)?'—':val.toFixed(3); };
+const setV = (id,val) => { const el=document.getElementById(id); if(el) el.value = isNaN(val)||!isFinite(val)?'':val.toFixed(4); };
+
+// ===== STEERING EFFORT =====
+let swAngle=0, swAnimId=null;
+function calcEffort(){
+  const Wf=v('e_wf'), R=v('e_slr'), B=v('e_B'), kpcd=v('e_kpcd');
+  const kpi=v('e_kpi'), cam=v('e_camber'), rimoff=v('e_rimoffset'), mu=v('e_mu');
+  const stgarm=v('e_stgarm'), pitman=v('e_pitman'), dleff=v('e_dleff');
+  const sgbt=v('e_sgbt'), gr=v('e_gr'), coleff=v('e_coleff'), swrad=v('e_swrad');
+
+  if(!Wf||!R||!B||!kpcd) return;
+
+  const FAW_N = Wf * 9.81;
+  const pivot = kpcd + 2*(R*Math.cos(d2r(cam))+ rimoff*Math.sin(d2r(cam)))*Math.tan(d2r(kpi));
+  const track = kpcd + 2*(rimoff*Math.cos(d2r(cam)) - R*Math.sin(d2r(cam)));
+  const E = (track - pivot)/2;
+  const EB = E/B;
+  const KP_torque = mu * FAW_N * Math.sqrt(B*B/8 + E*E);
+
+  // Active condition inputs
+  const angR = v('sap_angR')||v('rh_angR')||v('lh_angR');
+  const angS = v('sap_angS')||v('rh_angS')||v('lh_angS');
+  const trackLH = v('sap_trackLH')||v('rh_trackLH')||v('lh_trackLH');
+  const angP = v('sap_angP')||v('rh_angP')||v('lh_angP');
+  const trackRH = v('sap_trackRH')||v('rh_trackRH')||v('lh_trackRH');
+  const angQ = v('sap_angQ')||v('rh_angQ')||v('lh_angQ');
+  const drop = v('sap_dropL')||v('rh_dropL')||v('lh_dropL');
+
+  const effTrkLH = trackLH * Math.cos(d2r(angP-90));
+  const effTrkRH = trackRH * Math.cos(d2r(angQ-90));
+  const forceTRLH = effTrkLH>0 ? KP_torque/effTrkLH : 0;
+  const forceTRRH = effTrkRH>0 ? KP_torque/effTrkRH : 0;
+  const tqRHKP = forceTRRH * effTrkRH;
+  const totalKP = KP_torque + tqRHKP;
+
+  const effStgArm = stgarm * Math.cos(d2r(90-angR));
+  const DL_force = effStgArm>0 ? totalKP/effStgArm : 0;
+  const effPitman = pitman * Math.cos(d2r(90-angS));
+  const sectTq = (dleff>0) ? DL_force*effPitman/dleff : 0;
+
+  const sgb90 = sgbt*0.9;
+  const remTq = sgb90 - sectTq;
+  const tqInput = gr>0 ? remTq/gr : 0;
+  const tqStgWhl = coleff>0 ? tqInput/coleff : 0;
+  const effN = swrad>0 ? tqStgWhl/swrad : 0;
+  const effKg = effN/9.81;
+  const turns = gr>0 ? (drop*gr)/360 : 0;
+
+  set('out_fawN', FAW_N);
+  set('out_pivot', pivot);
+  set('out_track', track);
+  set('out_kpoff', E);
+  set('out_kptq', KP_torque);
+  set('out_dlforce', DL_force);
+  set('out_sectq', sectTq);
+  set('out_effN', effN);
+  set('out_effkg', effKg);
+  set('out_turns', turns);
+
+  document.getElementById('int_calcs').innerHTML =
+    `FAW (N): <span style="color:var(--accent)">${FAW_N.toFixed(1)}</span>\n` +
+    `Pivot Center (m): <span style="color:var(--accent)">${pivot.toFixed(4)}</span>\n` +
+    `Track at Ground (m): <span style="color:var(--accent)">${track.toFixed(4)}</span>\n` +
+    `KP Offset E (m): <span style="color:var(--accent)">${E.toFixed(4)}</span>\n` +
+    `KP Torque SAP (N-m): <span style="color:var(--accent4)">${KP_torque.toFixed(2)}</span>\n` +
+    `Eff. Track Arm LH (m): <span style="color:var(--accent)">${effTrkLH.toFixed(4)}</span>\n` +
+    `Force Tie Rod LH (N): <span style="color:var(--accent)">${forceTRLH.toFixed(2)}</span>\n` +
+    `Force Tie Rod RH (N): <span style="color:var(--accent)">${forceTRRH.toFixed(2)}</span>\n` +
+    `Total KP Torque (N-m): <span style="color:var(--accent4)">${totalKP.toFixed(2)}</span>\n` +
+    `Draglink Force (N): <span style="color:var(--accent)">${DL_force.toFixed(2)}</span>\n` +
+    `SGB @ 90% eff (N-m): <span style="color:var(--accent)">${sgb90.toFixed(2)}</span>\n` +
+    `Rem. Torque Sector (N-m): <span style="color:var(--accent)">${remTq.toFixed(2)}</span>`;
+
+  animateSW(turns);
+}
+
+function animateSW(turns){
+  if(swAnimId) cancelAnimationFrame(swAnimId);
+  const canvas=document.getElementById('swCanvas');
+  const ctx=canvas.getContext('2d');
+  const totalDeg = turns*360;
+  let cur=0, dir=totalDeg>=0?1:-1;
+  const speed=2;
+  document.getElementById('swLabel').textContent=`${Math.abs(turns).toFixed(2)} turns ${totalDeg>=0?'Clockwise':'Anti-Clockwise'}`;
+  function draw(){
+    ctx.clearRect(0,0,200,200);
+    ctx.save(); ctx.translate(100,100);
+    // Outer ring
+    ctx.beginPath(); ctx.arc(0,0,80,0,Math.PI*2);
+    ctx.strokeStyle='rgba(0,212,255,0.3)'; ctx.lineWidth=12; ctx.stroke();
+    // Spokes
+    ctx.rotate(d2r(cur));
+    for(let i=0;i<3;i++){
+      ctx.save(); ctx.rotate(d2r(i*120));
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-65);
+      ctx.strokeStyle='#00d4ff'; ctx.lineWidth=4; ctx.lineCap='round'; ctx.stroke();
+      ctx.restore();
+    }
+    // Hub
+    ctx.beginPath(); ctx.arc(0,0,14,0,Math.PI*2);
+    ctx.fillStyle='#7c3aed'; ctx.fill();
+    // Ring highlight
+    ctx.beginPath(); ctx.arc(0,0,80,0,Math.PI*2);
+    ctx.strokeStyle='rgba(0,212,255,0.8)'; ctx.lineWidth=3; ctx.stroke();
+    ctx.restore();
+    if(Math.abs(cur)<Math.abs(totalDeg)){ cur+=speed*dir; swAnimId=requestAnimationFrame(draw);}
+  }
+  draw();
+}
+
+// ===== ACKERMAN =====
+let ackRows=[];
+function addAckRow(){
+  const id=Date.now();
+  ackRows.push({id,drop:0,Ø1:0,theta:0});
+  renderAckTable();
+}
+function removeAckRow(id){
+  ackRows=ackRows.filter(r=>r.id!==id);
+  renderAckTable();
+}
+function clearAckRows(){ ackRows=[]; renderAckTable(); drawAckerman(); }
+
+function renderAckTable(){
+  const L=v('ack_L'), T=v('ack_T'), gr=v('ack_gr');
+  const body=document.getElementById('ackBody');
+  body.innerHTML='';
+  ackRows.forEach(row=>{
+    const tr=document.createElement('tr');
+    const theta=row.theta, Ø1=row.Ø1, drop=row.drop;
+    const TL = L>0 ? T/L : 0;
+    const invtan = theta>0 ? 1/Math.tan(d2r(theta)) : 0;
+    const val = invtan - TL;
+    const Ø = val!=0 ? r2d(Math.atan(1/val)) : 0;
+    const errD = Ø - Ø1;
+    const errPct = Ø!=0 ? Math.abs((Ø-Ø1)/Ø)*100 : 0;
+    const pctAck = (Ø-theta)!=0 ? ((Ø1-theta)/(Ø-theta))*100 : 0;
+    const turns = gr>0 ? (drop*gr)/360 : 0;
+    const errTag = errPct<5?'good':errPct<15?'warn':'bad';
+    tr.innerHTML=`
+      <td><input type="number" value="${L}" style="width:80px;background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;" readonly></td>
+      <td><input type="number" value="${T}" style="width:80px;background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;" readonly></td>
+      <td><input type="number" value="${theta}" style="width:70px;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;" oninput="ackRows.find(r=>r.id==${row.id}).theta=parseFloat(this.value)||0;calcAckerman()"></td>
+      <td><input type="number" value="${Ø1}" style="width:70px;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;" oninput="ackRows.find(r=>r.id==${row.id}).Ø1=parseFloat(this.value)||0;calcAckerman()"></td>
+      <td style="color:var(--text2)">${TL.toFixed(4)}</td>
+      <td style="color:var(--text2)">${invtan.toFixed(4)}</td>
+      <td style="color:var(--accent)">${Ø.toFixed(3)}</td>
+      <td style="color:var(--accent4)">${errD.toFixed(3)}</td>
+      <td><span class="tag tag-${errTag}">${errPct.toFixed(2)}%</span></td>
+      <td style="color:var(--accent3)">${pctAck.toFixed(2)}%</td>
+      <td><input type="number" value="${drop}" style="width:70px;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;" oninput="ackRows.find(r=>r.id==${row.id}).drop=parseFloat(this.value)||0;calcAckerman()"></td>
+      <td style="color:var(--accent4)">${turns.toFixed(2)}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="removeAckRow(${row.id})">&#10005;</button></td>`;
+    body.appendChild(tr);
+  });
+  drawAckerman();
+  updateAckSummary();
+}
+function calcAckerman(){ renderAckTable(); }
+
+function updateAckSummary(){
+  const L=v('ack_L'), T=v('ack_T');
+  let html='';
+  if(!L||!T){ document.getElementById('ack_summary').innerHTML='<span style="color:var(--text2)">Enter L and T values...</span>'; return; }
+  html+=`<div>L (Wheelbase): <span style="color:var(--accent)">${L} mm</span></div>`;
+  html+=`<div>T (KPI Distance): <span style="color:var(--accent)">${T} mm</span></div>`;
+  html+=`<div>T/L Ratio: <span style="color:var(--accent)">${(T/L).toFixed(4)}</span></div>`;
+  ackRows.forEach((row,i)=>{
+    const TL=T/L, theta=row.theta;
+    if(!theta) return;
+    const invtan=1/Math.tan(d2r(theta));
+    const val=invtan-TL;
+    const Ø=val!=0?r2d(Math.atan(1/val)):0;
+    const errD=Ø-row.Ø1;
+    const errPct=Ø!=0?Math.abs((Ø-row.Ø1)/Ø)*100:0;
+    html+=`<div style="margin-top:6px;border-top:1px solid var(--border);padding-top:6px;">Row ${i+1} | θ=${theta}°: <span style="color:${errPct<5?'var(--accent3)':errPct<15?'var(--accent4)':'var(--danger)'}">${errPct.toFixed(2)}% error</span></div>`;
+  });
+  document.getElementById('ack_summary').innerHTML=html||'<span style="color:var(--text2)">Add rows to see summary...</span>';
+}
+
+function drawAckerman(){
+  const canvas=document.getElementById('ackCanvas');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#161b22'; ctx.fillRect(0,0,W,H);
+
+  const L=v('ack_L'), T=v('ack_T');
+  if(!L||!T||!ackRows.length){ drawAckPlaceholder(ctx,W,H); return; }
+
+  const scale=Math.min(W,H)*0.5/Math.max(L,T);
+  const cx=W/2, cy=H*0.6;
+  // Draw axles
+  ctx.strokeStyle='rgba(0,212,255,0.4)'; ctx.lineWidth=2; ctx.setLineDash([6,4]);
+  ctx.beginPath(); ctx.moveTo(cx-T*scale*0.6,cy); ctx.lineTo(cx+T*scale*0.6,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx-T*scale*0.6,cy-L*scale); ctx.lineTo(cx+T*scale*0.6,cy-L*scale); ctx.stroke();
+  ctx.setLineDash([]);
+  // Kingpin points
+  const colors=['#00d4ff','#10b981','#f59e0b','#ef4444','#7c3aed'];
+  ackRows.forEach((row,i)=>{
+    const theta=row.theta, Ø1=row.Ø1;
+    if(!theta||!Ø1) return;
+    const TL=T/L, invtan=1/Math.tan(d2r(theta));
+    const val=invtan-TL;
+    const Ø=val!=0?r2d(Math.atan(1/val)):0;
+    const col=colors[i%colors.length];
+    const kpBL={x:cx-T*scale/2, y:cy}, kpBR={x:cx+T*scale/2, y:cy};
+    const kpFL={x:cx-T*scale/2, y:cy-L*scale}, kpFR={x:cx+T*scale/2, y:cy-L*scale};
+    // Outer wheel ray (RH)
+    const len=Math.min(W,H)*0.25;
+    ctx.strokeStyle=col; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(kpFR.x,kpFR.y);
+    ctx.lineTo(kpFR.x+len*Math.sin(d2r(theta)),kpFR.y-len*Math.cos(d2r(theta)));
+    ctx.stroke();
+    // Ideal inner ray (LH)
+    ctx.strokeStyle=col; ctx.lineWidth=2; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(kpFL.x,kpFL.y);
+    ctx.lineTo(kpFL.x-len*Math.sin(d2r(Ø)),kpFL.y-len*Math.cos(d2r(Ø)));
+    ctx.stroke();
+    // Actual inner ray
+    ctx.strokeStyle='rgba(239,68,68,0.7)'; ctx.setLineDash([2,4]);
+    ctx.beginPath(); ctx.moveTo(kpFL.x,kpFL.y);
+    ctx.lineTo(kpFL.x-len*Math.sin(d2r(Ø1)),kpFL.y-len*Math.cos(d2r(Ø1)));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // Labels
+    ctx.fillStyle=col; ctx.font='11px Inter';
+    ctx.fillText(`θ=${theta}° | Ideal=${Ø.toFixed(1)}° | Act=${Ø1}°`,10,20+i*18);
+  });
+  // Axle labels
+  ctx.fillStyle='rgba(0,212,255,0.6)'; ctx.font='11px Inter';
+  ctx.fillText('Front Axle',cx+T*scale*0.6+6,cy-L*scale+4);
+  ctx.fillText('Rear Axle',cx+T*scale*0.6+6,cy+4);
+  // Legend
+  ctx.fillStyle='var(--accent)';
+  ctx.strokeStyle='rgba(0,212,255,0.8)'; ctx.lineWidth=1.5; ctx.setLineDash([4,4]);
+  ctx.font='10px Inter'; ctx.fillStyle='rgba(0,212,255,0.8)';
+  ctx.fillText('— Ideal inner angle',10,H-34);
+  ctx.fillStyle='rgba(239,68,68,0.8)'; ctx.setLineDash([2,4]);
+  ctx.fillText('-- Actual inner angle',10,H-18);
+  ctx.setLineDash([]);
+}
+
+function drawAckPlaceholder(ctx,W,H){
+  ctx.fillStyle='rgba(0,212,255,0.06)'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(0,212,255,0.4)'; ctx.font='14px Inter';
+  ctx.textAlign='center';
+  ctx.fillText('Enter L, T values and add rows to visualize Ackerman geometry',W/2,H/2);
+  ctx.textAlign='left';
+}
+
+// ===== TCD =====
+let tcdAnimId=null, tcdAngle=0;
+function calcTCD(){
+  const KS=v('t_ks'), RR=v('t_rr'), Ca=v('t_ca'), KI=v('t_ki');
+  const WB=v('t_wb'), Ota=v('t_ota'), Wd=v('t_wd'), FOH=v('t_foh');
+  if(!KS||!RR||!WB||!Ota){ resetTCDOutputs(); return; }
+
+  const TOS_init = 0; // Will compute T iteratively
+  // T = KS + 2*(TOS - RR*tan(Ca))*sin(Ca), TOS=(T-KS)/2
+  // Self-referential: solve T = KS + 2*((T-KS)/2 - RR*tan(Ca))*sin(Ca)
+  // T = KS + (T-KS)*sin(Ca) - 2*RR*tan(Ca)*sin(Ca)
+  // T - T*sin(Ca) = KS - KS*sin(Ca) - 2*RR*tan(Ca)*sin(Ca)
+  // T*(1-sin(Ca)) = KS*(1-sin(Ca)) - 2*RR*tan(Ca)*sin(Ca)
+  const sinCa=Math.sin(d2r(Ca)), tanCa=Math.tan(d2r(Ca));
+  let T_val;
+  if(Math.abs(1-sinCa)<0.0001) T_val=KS;
+  else T_val = KS - (2*RR*tanCa*sinCa)/(1-sinCa);
+
+  const TOS = (T_val - KS)/2;
+  const OS = TOS - RR*Math.tan(d2r(KI));
+  const sinOta = Math.sin(d2r(Ota));
+  const TD = sinOta>0 ? 2*(WB/sinOta + OS) : 0;
+
+  document.getElementById('out_tos').textContent=TOS.toFixed(2);
+  document.getElementById('out_os').textContent=OS.toFixed(2);
+  document.getElementById('out_T').textContent=T_val.toFixed(2);
+  document.getElementById('out_td').textContent=TD.toFixed(2);
+  document.getElementById('out_tdm').textContent=(TD/1000).toFixed(3);
+
+  document.getElementById('tcd_params').innerHTML=
+    `KS: <span style="color:var(--accent)">${KS} mm</span><br>` +
+    `RR: <span style="color:var(--accent)">${RR} mm</span><br>` +
+    `Track at Ground T: <span style="color:var(--accent3)">${T_val.toFixed(1)} mm</span><br>` +
+    `TOS: <span style="color:var(--accent)">${TOS.toFixed(2)} mm</span><br>` +
+    `Scrub Radius OS: <span style="color:var(--accent4)">${OS.toFixed(2)} mm</span><br>` +
+    `WB: <span style="color:var(--accent)">${WB} mm</span><br>` +
+    `Outer Lock Angle: <span style="color:var(--accent)">${Ota}°</span><br>` +
+    `<strong style="color:var(--danger)">TD = ${TD.toFixed(0)} mm</strong><br>` +
+    `<strong style="color:var(--danger)">TD = ${(TD/1000).toFixed(3)} m</strong>`;
+
+  animateTCD(TD, WB, Wd, FOH);
+}
+
+function resetTCDOutputs(){
+  ['out_tos','out_os','out_T','out_td','out_tdm'].forEach(id=>document.getElementById(id).textContent='—');
+}
+
+function animateTCD(TD, WB, Wd, FOH){
+  if(tcdAnimId) cancelAnimationFrame(tcdAnimId);
+  const canvas=document.getElementById('tcdCanvas');
+  const ctx=canvas.getContext('2d');
+  const CW=canvas.width, CH=canvas.height;
+  const cx=CW/2, cy=CH/2;
+  const radius=Math.min(CW,CH)*0.38;
+  const scale=radius*2/TD;
+  const vW=Wd*scale, vL=(WB+FOH+500)*scale;
+  tcdAngle=0;
+  function draw(){
+    ctx.clearRect(0,0,CW,CH);
+    ctx.fillStyle='#161b22'; ctx.fillRect(0,0,CW,CH);
+    // Road circle
+    ctx.beginPath(); ctx.arc(cx,cy,radius,0,Math.PI*2);
+    ctx.strokeStyle='rgba(0,212,255,0.12)'; ctx.lineWidth=radius*0.3; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx,cy,radius,0,Math.PI*2);
+    ctx.strokeStyle='rgba(0,212,255,0.5)'; ctx.lineWidth=2; ctx.setLineDash([10,8]); ctx.stroke();
+    ctx.setLineDash([]);
+    // Radius label
+    ctx.fillStyle='var(--text2)'; ctx.font='12px Inter'; ctx.textAlign='center';
+    ctx.fillText(`TD = ${(TD/1000).toFixed(2)} m`,cx,cy+radius+20);
+    ctx.fillText(`R = ${(TD/2000).toFixed(2)} m`,cx,cy+4);
+    // Vehicle body
+    const vx=cx+radius*Math.cos(d2r(tcdAngle-90))-vW/2;
+    const vy=cy+radius*Math.sin(d2r(tcdAngle-90))-vL*0.3;
+    ctx.save();
+    ctx.translate(cx+radius*Math.cos(d2r(tcdAngle-90)),cy+radius*Math.sin(d2r(tcdAngle-90)));
+    ctx.rotate(d2r(tcdAngle));
+    // Truck body
+    ctx.fillStyle='rgba(0,212,255,0.15)'; ctx.strokeStyle='rgba(0,212,255,0.8)'; ctx.lineWidth=1.5;
+    const bL=vL>0?Math.max(vL,20):40, bW=vW>0?Math.max(vW,10):20;
+    ctx.fillRect(-bW/2,-bL*0.6,bW,bL); ctx.strokeRect(-bW/2,-bL*0.6,bW,bL);
+    // Cabin
+    ctx.fillStyle='rgba(124,58,237,0.4)'; ctx.strokeStyle='rgba(124,58,237,0.9)';
+    ctx.fillRect(-bW/2,-bL*0.6,bW,bL*0.25); ctx.strokeRect(-bW/2,-bL*0.6,bW,bL*0.25);
+    // Wheels
+    ctx.fillStyle='rgba(0,212,255,0.6)';
+    [[-bW/2-4,-bL*0.4],[bW/2-2,-bL*0.4],[-bW/2-4,bL*0.2],[bW/2-2,bL*0.2]].forEach(([wx,wy])=>{
+      ctx.fillRect(wx,wy,6,12);
+    });
+    ctx.restore();
+    // Direction arrow
+    ctx.fillStyle='rgba(0,212,255,0.6)'; ctx.font='11px Inter'; ctx.textAlign='left';
+    ctx.fillText('↻ Turning Circle',10,20);
+    tcdAngle=(tcdAngle+1.2)%360;
+    tcdAnimId=requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// Initialize Ackerman Table with 2 starter rows
+window.onload=function(){
+  addAckRow(); addAckRow();
+  drawAckPlaceholder(document.getElementById('ackCanvas').getContext('2d'),580,320);
+  // Draw default SW
+  const canvas=document.getElementById('swCanvas');
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#161b22'; ctx.fillRect(0,0,200,200);
+  ctx.save(); ctx.translate(100,100);
+  ctx.beginPath(); ctx.arc(0,0,80,0,Math.PI*2);
+  ctx.strokeStyle='rgba(0,212,255,0.3)'; ctx.lineWidth=12; ctx.stroke();
+  for(let i=0;i<3;i++){ctx.save();ctx.rotate(d2r(i*120));ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-65);ctx.strokeStyle='#00d4ff';ctx.lineWidth=4;ctx.lineCap='round';ctx.stroke();ctx.restore();}
+  ctx.beginPath(); ctx.arc(0,0,14,0,Math.PI*2);
+  ctx.fillStyle='#7c3aed'; ctx.fill();
+  ctx.beginPath(); ctx.arc(0,0,80,0,Math.PI*2);
+  ctx.strokeStyle='rgba(0,212,255,0.8)'; ctx.lineWidth=3; ctx.stroke();
+  ctx.restore();
+};
+</script>
+</body></html>
